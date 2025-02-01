@@ -1,0 +1,18 @@
+<resources>
+    <string name="app_name">MangaShelf</string>
+    <string name="generic_error_message">Something went wrong</string>
+    <string name="sort_by">Sort By</string>
+    <string name="sort_by_colon">Sort By:</string>
+    <string name="reset">Reset</string>
+    <string name="retry">Retry</string>
+    <string name="loading_item_for_you">Loading the details for you</string>
+    <string name="loading_mangas_for_you">Loading mangas for you</string>
+    <string name="score_colon_n">Score: %f</string>
+    <string name="popularity_colon_n">Popularity: %d</string>
+    <string name="published_on">Published: %s</string>
+    <string name="category_type">Category: %s</string>
+    <string name="favorite">Favorite</string>
+    <string name="mark_as_read">Mark as read</string>
+    <string name="year">Year: %s</string>
+    <string name="sort_option">Sort Option</string>
+</resources>
