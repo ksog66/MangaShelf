@@ -50,7 +50,6 @@ import com.example.mangashelfassignment.ui.theme.MangaShelfAssignmentTheme
 import com.example.mangashelfassignment.util.disableUIInteraction
 import com.example.mangashelfassignment.util.enableUIInteraction
 import com.example.mangashelfassignment.util.getActivityOrNull
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
 import java.util.Locale
@@ -76,10 +75,14 @@ fun HomeRoute(
         }
     }
 
-    Box(modifier = Modifier.fillMaxSize().background(white1)) {
+    Box(modifier = Modifier
+        .fillMaxSize()
+        .background(white1)) {
         if (isInitialLoading) {
             LoadingScreen(
-                modifier = modifier.fillMaxSize().background(white1),
+                modifier = modifier
+                    .fillMaxSize()
+                    .background(white1),
                 stringResource(R.string.loading_mangas_for_you)
             )
         } else if (mangaLazyList.itemSnapshotList.isEmpty() && mangaLazyList.loadState.refresh is LoadState.Error){
@@ -147,25 +150,24 @@ fun HomeScreen(
                 val yearFormat = SimpleDateFormat("yyyy", Locale.getDefault())
                 val publishedYear = yearFormat.format(firstVisibleManga.publishedDate).toInt()
                 if (selectedYear != publishedYear) {
-                    delay(100)
                     onYearScrolled(publishedYear)
                 }
             }
         }
     }
 
-    LaunchedEffect(scrollToMangaId, mangaList.itemCount) {
+    LaunchedEffect(scrollToMangaId, mangaList.itemSnapshotList.items.size) {
         if (scrollToMangaId.isNotEmpty()) {
-            val mangaToScroll = mangaList.itemSnapshotList.find { it?.id == scrollToMangaId }
+            val mangaToScroll = mangaList.itemSnapshotList.items.find { it.id == scrollToMangaId }
             if (mangaToScroll != null) {
-                val scrollIndex = mangaList.itemSnapshotList.indexOf(mangaToScroll)
-                lazyListState.scrollToItem(scrollIndex)
+                val scrollIndex = mangaList.itemSnapshotList.items.indexOf(mangaToScroll)
+                lazyListState.scrollToItem(scrollIndex, scrollOffset = 0)
                 resetScrolling.invoke()
                 activity?.enableUIInteraction()
             } else {
-                val lastIndex = mangaList.itemCount - 1
+                val lastIndex = mangaList.itemSnapshotList.items.size - 1
                 if (lastIndex >= 0) {
-                    lazyListState.scrollToItem(lastIndex)
+                    lazyListState.scrollToItem(lastIndex, scrollOffset = 0)
                     activity?.disableUIInteraction()
                 }
             }
