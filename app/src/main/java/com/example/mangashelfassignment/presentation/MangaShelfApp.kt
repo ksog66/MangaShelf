@@ -1,5 +1,14 @@
 package com.example.mangashelfassignment.presentation
 
+import androidx.compose.animation.AnimatedContentTransitionScope
+import androidx.compose.animation.EnterTransition
+import androidx.compose.animation.ExitTransition
+import androidx.compose.animation.core.EaseIn
+import androidx.compose.animation.core.EaseOut
+import androidx.compose.animation.core.LinearEasing
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
@@ -35,7 +44,9 @@ fun MangaNavHost(
 ) {
     NavHost(
         navController = navController,
-        startDestination = AppScreens.HomeFeed.route
+        startDestination = AppScreens.HomeFeed.route,
+        enterTransition = { EnterTransition.None },
+        exitTransition = { ExitTransition.None }
     ) {
         composable(route = AppScreens.HomeFeed.route) {
             HomeRoute(
@@ -49,7 +60,27 @@ fun MangaNavHost(
 
         composable(
             route = AppScreens.MangaDetail.route,
-            arguments = listOf(navArgument(MANGA_ID_KEY) { type = NavType.StringType })
+            arguments = listOf(navArgument(MANGA_ID_KEY) { type = NavType.StringType }),
+            enterTransition = {
+                fadeIn(
+                    animationSpec = tween(
+                        300, easing = LinearEasing
+                    )
+                ) + slideIntoContainer(
+                    animationSpec = tween(300, easing = EaseIn),
+                    towards = AnimatedContentTransitionScope.SlideDirection.Start
+                )
+            },
+            exitTransition = {
+                fadeOut(
+                    animationSpec = tween(
+                        300, easing = LinearEasing
+                    )
+                ) + slideOutOfContainer(
+                    animationSpec = tween(300, easing = EaseOut),
+                    towards = AnimatedContentTransitionScope.SlideDirection.End
+                )
+            }
         ) {
             MangaDetailRoute(
                 modifier = modifier

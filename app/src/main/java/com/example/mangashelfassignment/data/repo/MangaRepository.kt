@@ -33,8 +33,10 @@ class MangaRepository @Inject constructor(
         return Pager(
             config = PagingConfig(
                 initialLoadSize = 20,
-                pageSize = 15,
-                enablePlaceholders = true
+                prefetchDistance = 5,
+                pageSize = 20,
+                enablePlaceholders = false,
+                jumpThreshold = 20
             ),
             remoteMediator = MangaRemoteMediator(dataSource, db),
             pagingSourceFactory = pagingSourceFactory

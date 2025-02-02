@@ -73,6 +73,9 @@ dependencies {
     implementation(libs.moshi.adapters)
     implementation(libs.retrofit.converter.moshi)
 
+    //navigation compose
+    implementation(libs.androidx.navigation.compose)
+
     //hilt
     implementation(libs.dagger.hiltAndroid)
     implementation(libs.hilt.navigationCompose)

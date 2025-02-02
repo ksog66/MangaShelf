@@ -38,6 +38,7 @@ import androidx.paging.compose.itemContentType
 import androidx.paging.compose.itemKey
 import com.example.mangashelfassignment.R
 import com.example.mangashelfassignment.presentation.Manga
+import com.example.mangashelfassignment.presentation.components.GenericErrorScreen
 import com.example.mangashelfassignment.presentation.components.LoadingScreen
 import com.example.mangashelfassignment.presentation.components.MangaCard
 import com.example.mangashelfassignment.presentation.components.MsBottomSheet
@@ -80,6 +81,17 @@ fun HomeRoute(
             LoadingScreen(
                 modifier = modifier.fillMaxSize().background(white1),
                 stringResource(R.string.loading_mangas_for_you)
+            )
+        } else if (mangaLazyList.itemSnapshotList.isEmpty() && mangaLazyList.loadState.refresh is LoadState.Error){
+            val e = mangaLazyList.loadState.refresh as LoadState.Error
+            val message = e.error.message
+            GenericErrorScreen(
+                modifier = Modifier,
+                message = message,
+                ctaText = stringResource(R.string.retry),
+                onCtaClick = {
+                    mangaLazyList.refresh()
+                }
             )
         } else {
             HomeScreen(
