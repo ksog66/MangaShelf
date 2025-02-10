@@ -62,4 +62,16 @@ class MangaRepository @Inject constructor(
         return db.mangaDao().getFirstMangaIdForYear(year)
     }
 
+    fun fetchRecommendedManga(category: String) : Flow<PagingData<MangaEntity>> {
+        val pagingSourceFactory: () -> PagingSource<Int, MangaEntity> = { db.mangaDao().fetchRecommendedManga(category) }
+        return Pager(
+            config = PagingConfig(
+                initialLoadSize = 50,
+                prefetchDistance = 40,
+                pageSize = 20,
+                enablePlaceholders = false
+            ),
+            pagingSourceFactory = pagingSourceFactory
+        ).flow
+    }
 }

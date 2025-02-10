@@ -1,8 +1,13 @@
 package com.example.mangashelfassignment.presentation.detail
 
+import android.util.Log
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.*
@@ -14,16 +19,22 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.paging.LoadState
+import androidx.paging.compose.LazyPagingItems
+import androidx.paging.compose.collectAsLazyPagingItems
+import androidx.paging.compose.itemContentType
+import androidx.paging.compose.itemKey
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import com.example.mangashelfassignment.R
 import com.example.mangashelfassignment.presentation.Manga
 import com.example.mangashelfassignment.presentation.components.GenericErrorScreen
+import com.example.mangashelfassignment.presentation.components.HorizontalLoadingItem
+import com.example.mangashelfassignment.presentation.components.HorizontalMangaCard
 import com.example.mangashelfassignment.presentation.components.LoadingScreen
 import com.example.mangashelfassignment.ui.theme.Colors.white1
 import java.text.SimpleDateFormat
@@ -33,10 +44,11 @@ import java.util.*
 fun MangaDetailRoute(
     modifier: Modifier = Modifier,
     viewModel: MangaViewModel = hiltViewModel(),
+    navigateToMangaDetail: (String) -> Unit,
     navigateBack: () -> Unit
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
-
+    val recommendedMangas = viewModel.recommendedMangaPager.collectAsLazyPagingItems()
     when (uiState) {
         is MangaDetailUiState.Error -> {
             val message = (uiState as MangaDetailUiState.Error).message
@@ -53,12 +65,14 @@ fun MangaDetailRoute(
         }
 
         is MangaDetailUiState.Success -> {
-            val manga = (uiState as MangaDetailUiState.Success).manga
+            val data = (uiState as MangaDetailUiState.Success)
             MangaDetailScreen(
                 modifier = modifier,
-                manga = manga,
+                manga = data.manga,
+                recommendedMangas = recommendedMangas,
                 updateFavorite = viewModel::updateFavorite,
                 markAsRead = viewModel::markAsRead,
+                navigateToMangaDetail = navigateToMangaDetail,
                 onBackClick = navigateBack
             )
         }
@@ -70,8 +84,10 @@ fun MangaDetailRoute(
 fun MangaDetailScreen(
     modifier: Modifier = Modifier,
     manga: Manga,
+    recommendedMangas: LazyPagingItems<Manga>,
     updateFavorite: (String, Boolean) -> Unit,
     markAsRead: (String, Boolean) -> Unit,
+    navigateToMangaDetail: (String) -> Unit,
     onBackClick: () -> Unit
 ) {
     val context = LocalContext.current
@@ -89,11 +105,16 @@ fun MangaDetailScreen(
         }
     ) { paddingValues ->
 
-        val publishedDate = SimpleDateFormat("MMMM d, yyyy", Locale.getDefault()).format(manga.publishedDate)
+        val publishedDate =
+            SimpleDateFormat("MMMM d, yyyy", Locale.getDefault()).format(manga.publishedDate)
+        val lazyListState = rememberLazyListState()
+        val scrollState = rememberScrollState()
         Column(
             modifier = Modifier
+                .fillMaxSize()
                 .padding(paddingValues)
                 .padding(16.dp)
+                .verticalScroll(scrollState)
         ) {
             AsyncImage(
                 model = ImageRequest.Builder(context)
@@ -113,7 +134,11 @@ fun MangaDetailScreen(
                 fontSize = 16.sp, fontWeight = FontWeight.SemiBold
             )
             Spacer(Modifier.height(12.dp))
-            Text(text = stringResource(R.string.score_colon_n, manga.score), fontSize = 18.sp, fontWeight = FontWeight.Medium)
+            Text(
+                text = stringResource(R.string.score_colon_n, manga.score),
+                fontSize = 18.sp,
+                fontWeight = FontWeight.Medium
+            )
             Spacer(Modifier.height(4.dp))
             Text(
                 text = stringResource(R.string.popularity_colon_n, manga.popularity),
@@ -139,7 +164,11 @@ fun MangaDetailScreen(
                         contentDescription = "Favorite"
                     )
                     Spacer(modifier = Modifier.width(8.dp))
-                    Text(stringResource(R.string.favorite), fontSize = 16.sp, fontWeight = FontWeight.Bold)
+                    Text(
+                        stringResource(R.string.favorite),
+                        fontSize = 16.sp,
+                        fontWeight = FontWeight.Bold
+                    )
                 }
                 Button(
                     onClick = {
@@ -151,23 +180,54 @@ fun MangaDetailScreen(
                         contentDescription = "Read"
                     )
                     Spacer(modifier = Modifier.width(8.dp))
-                    Text(stringResource(R.string.mark_as_read), fontSize = 16.sp, fontWeight = FontWeight.Bold)
+                    Text(
+                        stringResource(R.string.mark_as_read),
+                        fontSize = 16.sp,
+                        fontWeight = FontWeight.Bold
+                    )
+                }
+            }
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            if (recommendedMangas.loadState.refresh !is LoadState.Error && recommendedMangas.itemSnapshotList.isNotEmpty() && manga.isRead) {
+                Text(
+                    text = stringResource(R.string.you_might_like),
+                    fontWeight = FontWeight.SemiBold,
+                    fontSize = 24.sp
+                )
+                Spacer(modifier = Modifier.height(16.dp))
+
+                LazyRow(
+                    modifier = Modifier.fillMaxWidth(),
+                    contentPadding = PaddingValues(vertical = 8.dp),
+                    state = lazyListState
+                ) {
+                    items(
+                        count = recommendedMangas.itemCount,
+                        key = recommendedMangas.itemKey { it.id },
+                        contentType = recommendedMangas.itemContentType {
+                            "Recommended Mangas"
+                        }
+                    ) { index ->
+                        val recommendedManga = recommendedMangas[index]
+
+                        Log.d("RecommendedManga", """
+                        Item Count -> ${recommendedMangas.itemCount}
+                    """.trimIndent())
+                        if (recommendedManga != null) {
+                            HorizontalMangaCard(
+                                manga = recommendedManga,
+                                onCardClick = navigateToMangaDetail
+                            )
+                        }
+
+                        if (recommendedMangas.loadState.append == LoadState.Loading) {
+                            HorizontalLoadingItem()
+                        }
+                    }
                 }
             }
         }
     }
-}
-
-@Preview
-@Composable
-private fun ManageDetailScreenPreview() {
-    MangaDetailScreen(
-        manga = Manga(
-            id = "1", title = "Naruto", image = "", score = 9.0, popularity = 1,
-            publishedDate = Date(), category = "Shonen", isFavorite = false, isRead = false
-        ),
-        updateFavorite = { _, _ -> },
-        markAsRead = { _, _ -> },
-        onBackClick = {}
-    )
 }

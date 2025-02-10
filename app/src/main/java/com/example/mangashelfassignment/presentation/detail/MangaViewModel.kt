@@ -4,14 +4,20 @@ import android.util.Log
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import androidx.paging.PagingData
+import androidx.paging.cachedIn
+import androidx.paging.map
 import com.example.mangashelfassignment.data.mapper.toManga
 import com.example.mangashelfassignment.data.repo.MangaRepository
 import com.example.mangashelfassignment.presentation.Manga
 import com.example.mangashelfassignment.presentation.navigation.MANGA_ID_KEY
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -26,6 +32,9 @@ class MangaViewModel @Inject constructor(
     private val _uiState = MutableStateFlow<MangaDetailUiState>(MangaDetailUiState.Loading)
     val uiState: StateFlow<MangaDetailUiState> = _uiState
 
+    private var category = ""
+
+    var recommendedMangaPager: Flow<PagingData<Manga>> = flow { emptyList<Manga>() }
 
     init {
         fetchManga()
@@ -42,11 +51,14 @@ class MangaViewModel @Inject constructor(
                 mangaRepository.fetchManga(mangaId).collectLatest { mangaEntity ->
                     if (mangaEntity != null) {
                         _uiState.value = MangaDetailUiState.Success(mangaEntity.toManga())
+                        if (mangaEntity.isRead) {
+                            category = mangaEntity.category
+                            fetchRecommendedManga()
+                        }
                     } else {
                         _uiState.value = MangaDetailUiState.Error("Couldn't find the manga")
                     }
                 }
-
             } catch (e: Exception) {
                 Log.e("MangaViewModel",  """
                     Error while fetching manga data ${e.message}
@@ -68,6 +80,18 @@ class MangaViewModel @Inject constructor(
         }
     }
 
+    private fun fetchRecommendedManga() {
+        try {
+            recommendedMangaPager = mangaRepository.fetchRecommendedManga(category)
+                .map { pagingData ->
+                    pagingData.map { mangaEntity ->
+                        mangaEntity.toManga()
+                    }
+                }.cachedIn(viewModelScope)
+        } catch (exception: Exception) {
+            recommendedMangaPager = flow { PagingData.empty<Manga>() }
+        }
+    }
 
 }
 sealed interface MangaDetailUiState {

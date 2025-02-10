@@ -83,7 +83,10 @@ fun MangaNavHost(
             }
         ) {
             MangaDetailRoute(
-                modifier = modifier
+                modifier = modifier,
+                navigateToMangaDetail = {
+                    navController.navigate(AppScreens.MangaDetail.passMangaId(it))
+                }
             ) {
                 navController.navigateUp()
             }

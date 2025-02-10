@@ -55,4 +55,7 @@ interface MangaDao {
     @Query("SELECT * FROM mangaentity WHERE id=:id")
     fun getMangaById(id: String): Flow<MangaEntity?>
 
+    @Query("SELECT * FROM mangaentity WHERE isRead=0 and category = :category ORDER BY popularity DESC, score DESC")
+    fun fetchRecommendedManga(category: String): PagingSource<Int, MangaEntity>
+
 }

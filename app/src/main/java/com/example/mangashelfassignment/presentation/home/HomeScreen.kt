@@ -43,6 +43,7 @@ import com.example.mangashelfassignment.presentation.components.LoadingScreen
 import com.example.mangashelfassignment.presentation.components.MangaCard
 import com.example.mangashelfassignment.presentation.components.MsBottomSheet
 import com.example.mangashelfassignment.presentation.components.SortOption
+import com.example.mangashelfassignment.presentation.components.VerticalLoadingItem
 import com.example.mangashelfassignment.presentation.components.YearTabs
 import com.example.mangashelfassignment.ui.theme.Colors.dangerRed
 import com.example.mangashelfassignment.ui.theme.Colors.white1
@@ -292,6 +293,8 @@ fun HomeScreen(
                             onCardClick = navigateToDetail
                         )
                     }
+                }
+                item {
                     if (mangaList.loadState.refresh is LoadState.Error) {
                         val e = mangaList.loadState.refresh as LoadState.Error
                         val message = e.error.message
@@ -300,7 +303,7 @@ fun HomeScreen(
                 }
             }
             if (mangaList.loadState.append == LoadState.Loading) {
-                LoadingItem()
+                VerticalLoadingItem()
             }
         }
     }
@@ -323,25 +326,6 @@ fun SortItem(
         RadioButton(selected = selected, onClick = onSelected)
         Spacer(modifier = Modifier.width(8.dp))
         Text(text = sort.sName)
-    }
-}
-
-@Composable
-fun LoadingItem() {
-    Box(
-        modifier = Modifier
-            .fillMaxWidth()
-            .wrapContentHeight(),
-        contentAlignment = Alignment.Center
-    ) {
-        CircularProgressIndicator(
-            modifier = Modifier
-                .width(42.dp)
-                .height(42.dp)
-                .padding(8.dp),
-            strokeWidth = 5.dp
-        )
-
     }
 }
 
