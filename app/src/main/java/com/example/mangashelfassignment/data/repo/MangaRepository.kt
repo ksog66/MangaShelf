@@ -66,9 +66,9 @@ class MangaRepository @Inject constructor(
         val pagingSourceFactory: () -> PagingSource<Int, MangaEntity> = { db.mangaDao().fetchRecommendedManga(category) }
         return Pager(
             config = PagingConfig(
-                initialLoadSize = 50,
-                prefetchDistance = 40,
-                pageSize = 20,
+                initialLoadSize = 10,
+                prefetchDistance = 5,
+                pageSize = 10,
                 enablePlaceholders = false
             ),
             pagingSourceFactory = pagingSourceFactory
